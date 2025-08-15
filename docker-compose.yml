@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    build: .
+    container_name: subscription-db
+    environment:
+      POSTGRES_DB: subscriptions
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: dbpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - subscription-network
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/local/bin/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Admin tool for database management
+  pgadmin:
+    image: dpage/pgadmin4:7
+    container_name: subscription-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@subscription.local
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8080:80"
+    networks:
+      - subscription-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  subscription-network:
+    driver: bridge
