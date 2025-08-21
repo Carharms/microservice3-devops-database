@@ -193,7 +193,6 @@ class TestDatabaseIntegration:
             "-c", sql_query
         ], capture_output=True, text=True)
         
-        # Should fail due to foreign key constraint
         assert result.returncode != 0, "Invalid foreign key should be rejected"
         assert "violates foreign key constraint" in result.stderr.lower(), "Should show foreign key error"
     
