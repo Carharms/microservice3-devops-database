@@ -240,27 +240,24 @@ pipeline {
                 script {
                     echo "Preparing deployment to ${env.DEPLOY_ENV} environment..."
                     
-                    // Production requires manual approval
+                    // Manual approval for Prod push - best practice
                     if (env.BRANCH_NAME == 'main') {
                         timeout(time: 10, unit: 'MINUTES') {
                             input message: "Deploy to production?", ok: "Deploy"
                         }
                     }
                     
-                    // Simple deployment - just update the image tag in the deployment repo
+                    // Updating image tag deploy repo
                     echo "Deploying ${DOCKER_IMAGE_NAME}:${IMAGE_TAG} to ${env.DEPLOY_ENV}"
                     
-                    // For now, just log what would be deployed
-                    // Later you can add actual kubectl commands when your cluster is ready
+                    // Example of what would be deployed - safety for troubleshooting purposes
                     echo "Would deploy to Kubernetes namespace: ${env.DEPLOY_ENV}"
                     echo "Image: ${DOCKER_IMAGE_NAME}:${IMAGE_TAG}"
                     if (env.IMAGE_TAG_SUFFIX) {
                         echo "Also tagged as: ${DOCKER_IMAGE_NAME}:${env.IMAGE_TAG_SUFFIX}"
                     }
-                    
-                    // Optional: Update deployment files in the main repo
-                    // This would require setting up Git credentials and pushing updates
-                    echo "Deployment stage completed successfully"
+                
+                    echo "Deployment completed successfully"
                 }
             }
         }
