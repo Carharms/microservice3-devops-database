@@ -1,65 +1,33 @@
-docker-compose up -d -> to test everything works
+## Database Service Overview ##
+Rrepository for the REST API that handles all order management for our e-commerce platform.
 
-Completed
-X - Set up branches (main, develop, feature, release, hotfix)
-X - Minikube: Ensure it's running for Kubernetes deployments
+## Setup ##
+Install Docker and Docker Compose on your local system.
 
-To Do
-Implement SonarQube and other elements into the Jenkinsfile
-Maybe run this locally in the Jenkins
+The database is designed to be provisioned as a container. For local development, you can use the provided docker-compose.yml file.
 
-Terraform: Run terraform init in the terraform directory
-Push code to develop branch → Should trigger dev deployment
-Create release/v1.0 branch → Should trigger staging deployment
-Merge to main → Should trigger prod deployment (with manual approval)
+1. Clone this repository:
+git clone <your-repo-url>
 
+2. Navigate to the project directory:
+cd database
 
-Testing
-Testing Integration:
+3. Start the PostgreSQL container in detached mode:
+docker-compose up -d
 
-Database First: Start with your database service
-Product Service: Ensure it can connect to database
-Order Service: Ensure it can connect to database and product service
-Frontend: Should connect to both API services
+This will create a running PostgreSQL instance that your microservices can connect to.
 
-Key Ports:
+## Project Architecture ##
 
-Frontend: 3000 (development), 80 (production)
-Product Service: 3001
-Order Service: 3002
-Database: 5432
+Technology Stack: We use PostgreSQL, a robust and reliable open-source relational database.
 
-Contingencies:
+Database Schemas: This repository holds the SQL scripts for creating and managing the database schemas for both the Product and Order services. This ensures that the database structure is version-controlled and can be easily replicated across environments.
 
-Database Connection Issues:
+Data Persistence: In a production environment, the database data is stored on a persistent volume to ensure that data is not lost when the container restarts or is moved. For local development, data is stored in a Docker volume.
 
-Check if PostgreSQL container is running
-Verify environment variables match
-Use docker logs container-name to debug
+## CI/CD Pipeline ##
+IaC with Terraform: Instead of being managed by a traditional CI/CD pipeline, the database infrastructure is provisioned and managed using Terraform. This allows us to define our infrastructure in code, ensuring consistency across dev, staging, and prod environments.
 
+State Management: Terraform uses local state management to track the provisioned infrastructure, preventing environment conflicts and providing a reliable way to manage database configurations.
 
-Cross-service Communication:
-
-Ensure services are on same Docker network
-Use service names (not localhost) in docker-compose
-
-
-Build Failures:
-
-Check Node.js version compatibility
-Clear npm cache: npm cache clean --force
-Remove node_modules and reinstall
-
-
-Frontend API Calls Failing:
-
-Verify CORS is enabled on backend services
-Check API URLs in environment variables
-Test backend endpoints directly with curl/Postman
-
-Quick Validation:
-bash# Test each service health endpoint
-curl http://localhost:3001/health  # Product service
-curl http://localhost:3002/health  # Order service
-curl http://localhost:3000         # Frontend
-This setup provides the minimal viable microservices needed for your project requirements while maintaining proper separation of concerns and basic functionality.RetryClaude does not have the ability to run the code it generates yet.Claude can make mistakes. Please double-check responses.
+Configuration: All database credentials and sensitive information are handled as Kubernetes Secrets in production and through environment variables in local development, ensuring they are not hardcoded.
