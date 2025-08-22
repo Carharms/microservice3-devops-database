@@ -166,13 +166,48 @@ pipeline {
             steps {
                 script {
                     echo "Pushing Docker image to registry..."
-                    docker.withRegistry('https://index.docker.io/v1/', env.DOCKER_HUB_CREDENTIALS) {
-                        def image = docker.image("${DOCKER_IMAGE_NAME}:${IMAGE_TAG}")
-                        image.push()
-                        
-                        if (env.IMAGE_TAG_SUFFIX) {
-                            image.push(env.IMAGE_TAG_SUFFIX)
+                    
+                    // First, verify the image exists locally
+                    if (isUnix()) {
+                        sh "docker images | grep ${DOCKER_IMAGE_NAME} || echo 'Image not found locally'"
+                        sh "docker tag ${DOCKER_IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_IMAGE_NAME}:${IMAGE_TAG}"
+                    } else {
+                        bat "docker images | findstr ${DOCKER_IMAGE_NAME} || echo 'Image not found locally'"
+                        bat "docker tag ${DOCKER_IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_IMAGE_NAME}:${IMAGE_TAG}"
+                    }
+                    
+                    // Push with explicit credential handling
+                    withCredentials([usernamePassword(credentialsId: env.DOCKER_HUB_CREDENTIALS, 
+                                                    passwordVariable: 'DOCKER_PASSWORD', 
+                                                    usernameVariable: 'DOCKER_USERNAME')]) {
+                        if (isUnix()) {
+                            sh '''
+                                echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                                docker push ${DOCKER_IMAGE_NAME}:${IMAGE_TAG}
+                            '''
+                            if (env.IMAGE_TAG_SUFFIX) {
+                                sh '''
+                                    docker tag ${DOCKER_IMAGE_NAME}:${IMAGE_TAG} ${DOCKER_IMAGE_NAME}:${IMAGE_TAG_SUFFIX}
+                                    docker push ${DOCKER_IMAGE_NAME}:${IMAGE_TAG_SUFFIX}
+                                '''
+                            }
+                        } else {
+                            bat '''
+                                echo %DOCKER_PASSWORD% | docker login -u %DOCKER_USERNAME% --password-stdin
+                                docker push %DOCKER_IMAGE_NAME%:%IMAGE_TAG%
+                            '''
+                            if (env.IMAGE_TAG_SUFFIX) {
+                                bat '''
+                                    docker tag %DOCKER_IMAGE_NAME%:%IMAGE_TAG% %DOCKER_IMAGE_NAME%:%IMAGE_TAG_SUFFIX%
+                                    docker push %DOCKER_IMAGE_NAME%:%IMAGE_TAG_SUFFIX%
+                                '''
+                            }
                         }
+                    }
+                    
+                    echo "Successfully pushed ${DOCKER_IMAGE_NAME}:${IMAGE_TAG}"
+                    if (env.IMAGE_TAG_SUFFIX) {
+                        echo "Successfully pushed ${DOCKER_IMAGE_NAME}:${env.IMAGE_TAG_SUFFIX}"
                     }
                 }
             }
