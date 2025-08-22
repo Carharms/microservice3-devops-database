@@ -6,7 +6,7 @@ pipeline {
         githubPush()
         pullRequest()
     }
-    
+    //test 
     environment {
         DOCKER_HUB_CREDENTIALS = 'docker-hub-credentials'
         DOCKER_IMAGE_NAME = 'carharms/db-service'
