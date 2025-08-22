@@ -4,7 +4,7 @@ pipeline {
     triggers {
         // Webhook triggers for different events
         githubPush()
-        pullRequest()
+        githubPullRequests()
     }
     //test 
     environment {
