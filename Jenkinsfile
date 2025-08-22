@@ -1,5 +1,11 @@
 pipeline {
     agent any
+
+    triggers {
+        // Webhook triggers for different events
+        githubPush()
+        pullRequest()
+    }
     
     environment {
         DOCKER_HUB_CREDENTIALS = 'docker-hub-credentials'
